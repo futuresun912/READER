@@ -28,7 +28,7 @@ addpath('data','eval');
 addpath(genpath('func'));
 
 %% Load the dataset
-dataset    = 'scene';
+dataset    = 'enron';
 load([dataset,'.mat']);
 
 %% Set global parameters
@@ -42,7 +42,7 @@ opts.gamma = 10;
 opts.k     = 1;
 opts.p     = 5;
 opts.b     = 1;
-opts.maxIt = 50;
+opts.maxIt = 30;
 
 %% Perform n-fold cross validation
 num_fold = 5;
@@ -56,7 +56,7 @@ for i = 1:num_fold
     train_id = find(train);
     train_l  = randsample(train_id,round(rate*length(train_id)));
     tic; 
-    Fea_Order  = READER(data(train,:),data(train_l,:),target(:,train_l),data(test,:),opts);
+    Fea_Order  = READER(data(train,:),data(train_l,:),target(:,train_l),opts);
     Fea_ID     = Fea_Order(1:round(dim*size(data,2)));
     Pre_Labels = BR(data(train_l,Fea_ID),target(:,train_l),data(test,Fea_ID));
     Results(1,i) = toc; 
