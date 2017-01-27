@@ -101,7 +101,7 @@ else
         HnX = bsxfun(@times,X,diag_Hn);
         
         % Updata V
-        V   = (Hn + Ly_it) \ (HnX * W);
+        V   = sparse(Hn + Ly_it) \ (HnX * W);
         
         % Update W
         W   = (HnX'*X + Hm + XLX) \ (HnX' * V);

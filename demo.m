@@ -42,7 +42,7 @@ opts.gamma = 10;
 opts.k     = 1;
 opts.p     = 5;
 opts.b     = 1;
-opts.maxIt = 30;
+opts.maxIt = 50;
 
 %% Perform n-fold cross validation
 num_fold = 5;
