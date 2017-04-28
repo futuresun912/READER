@@ -14,56 +14,56 @@
 %
 % [2] Matlab codes for dimensionality reduction
 % URL: http://www.cad.zju.edu.cn/home/dengcai/Data/DimensionReduction.html
-%
-% 
-% The mex files of Liblinear is generated in Windows(64bit).
-% If you want to conduct the program in other systems, please compile relevant
-% C files of the packages in order to run the program.
 
 %% To repeat the experiments
-rng(1);
+rng('default');
 
 %% Add necessary pathes
 addpath('data','eval');
 addpath(genpath('func'));
 
-%% Load the dataset
+%% Load a multi-label dataset and method
 dataset    = 'enron';
+method     = 'alg2';   % alg1, alg2
 load([dataset,'.mat']);
 
 %% Set global parameters
-rate       = 0.2;  % The percentage of labeled instances
+rate       = 0.3;  % The percentage of labeled instances
 dim        = 0.3;  % The percentage of selected features
 
 %% Set parameters of READER
 opts.alpha = 1;
 opts.beta  = 0.1;
 opts.gamma = 10;
-opts.k     = 1;
+opts.k     = 0.1;
 opts.p     = 5;
-opts.b     = 1;
-opts.maxIt = 50;
+opts.maxIt = 100;
+opts.epsIt = 1e-3;
 
 %% Perform n-fold cross validation
-num_fold = 5;
-Results  = zeros(3,num_fold);
-indices  = crossvalind('Kfold',size(data,1),num_fold);
-for i = 1:num_fold
-    rng(i);
+numFold = 5;
+Results = zeros(3,numFold);
+indices = crossvalind('Kfold',size(data,1),numFold);
+numS = round(dim*size(data,2));
+for i = 1:numFold
     disp(['Round ',num2str(i)]);
-    test     = (indices == i); 
-    train    = ~test;
-    train_id = find(train);
-    train_l  = randsample(train_id,round(rate*length(train_id)));
-    tic; 
-    Fea_Order  = READER(data(train,:),data(train_l,:),target(:,train_l),opts);
-    Fea_ID     = Fea_Order(1:round(dim*size(data,2)));
-    Pre_Labels = BR(data(train_l,Fea_ID),target(:,train_l),data(test,Fea_ID));
+    test  = (indices == i); 
+    train = ~test;
+    idXl  = randsample(find(train),round(rate*length(find(train))));
+    tic;
+    switch method
+        case 'alg1'
+            idF = READERalg1(data(train,:),data(idXl,:),target(:,idXl),opts);
+        case 'alg2'
+            idF = READER(data(train,:),data(idXl,:),target(:,idXl),opts);
+    end
+    idS = idF(1:numS);
+    Yt  = BR(data(idXl,idS),target(:,idXl),data(test,idS));
     Results(1,i) = toc; 
-    [Results(2:end,i),MetricList] = Evaluation(Pre_Labels,target(:,test));
+    [Results(2:end,i),MetricList] = Evaluation(Yt,target(:,test));
 end
 meanResults = squeeze(mean(Results,2));
 stdResults  = squeeze(std(Results,0,2) / sqrt(size(Results,2)));
 
 %% Show the experimental results
-printmat([meanResults,stdResults],[dataset,'_',num2str(rate),'_',num2str(dim)],['ExeTime ',MetricList],'Mean Std.');
+printmat([meanResults,stdResults],[dataset,'_',method,'_',num2str(rate),'_',num2str(dim)],['ExeTime ',MetricList],'Mean Std.');
